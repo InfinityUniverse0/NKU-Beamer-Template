@@ -68,15 +68,40 @@
             doi=false, isbn=false, url=false]{biblatex}
 \addbibresource{references.bib}
 
-% -- Make footnote citations tiny --
-\setbeamertemplate{footnote}{%
-  \parindent 0em\noindent%
-  \raggedright%
-  \usebeamercolor{footnote}%
-  \usebeamerfont{footnote}%
-  \hbox to 1.2em{\hfil\insertfootnotemark}%
-  \insertfootnotetext\par%
+% -- Frame-level footnotes: always at page bottom, not inside blocks --
+%    Saves citations globally; renders them above the footline bar.
+%    Works uniformly inside and outside tcolorbox environments.
+\makeatletter
+\gdef\nk@savedfoots{}
+
+\renewcommand{\footfullcite}[1]{%
+  \stepcounter{footnote}%
+  \textsuperscript{\tiny\color{NKPurple}\arabic{footnote}}%
+  \xdef\nk@savedfoots{%
+    \unexpanded\expandafter{\nk@savedfoots}%
+    \noexpand\nk@renderfn{\the\value{footnote}}{\noexpand\fullcite{#1}}%
+  }%
 }
+
+\newcommand{\nk@renderfn}[2]{%
+  \noindent\hskip 1.5em
+  \makebox[1em][r]{\textsuperscript{#1}\,}#2\par
+}
+
+\addtobeamertemplate{footline}{%
+  \ifx\nk@savedfoots\empty\else
+    \vskip 2pt
+    \hbox to \paperwidth{%
+      \hskip 1.5em{\color{NKGray}\rule{0.3\paperwidth}{0.2pt}}\hss}%
+    \vskip 2pt
+    \begingroup
+    \usebeamerfont{footnote}\usebeamercolor[fg]{footnote}%
+    \nk@savedfoots
+    \endgroup
+    \vskip 2pt
+  \fi
+  \gdef\nk@savedfoots{}%
+}{}
 
 % -- Common math operators --
 \DeclareMathOperator*{\argmax}{arg\,max}
