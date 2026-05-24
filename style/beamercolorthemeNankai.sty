@@ -1,0 +1,112 @@
+% ============================================================
+%  Nankai University Beamer Color Theme
+%  beamercolorthemeNankai.sty
+% ============================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamercolorthemeNankai}[2025/05/24 Nankai Color Theme]
+
+\mode<presentation>
+
+\RequirePackage{xcolor}
+
+% =========================
+%  Nankai University Colors
+% =========================
+\definecolor{NKPurple}{RGB}{122, 24, 84}           % primary — 南开紫
+\definecolor{NKPurpleDark}{RGB}{86, 16, 59}         % darker shade
+\definecolor{NKPurpleLight}{RGB}{162, 72, 124}      % lighter shade
+\definecolor{NKPurpleVeryLight}{RGB}{245, 238, 242} % tinted background
+\definecolor{NKGray}{RGB}{160, 160, 160}            % inactive / secondary text
+\definecolor{NKDarkGray}{RGB}{80, 80, 80}           % body text alternative
+\definecolor{NKLightGray}{RGB}{230, 230, 230}       % light rules
+
+% =========================
+%  Structure
+% =========================
+\setbeamercolor{structure}{fg=NKPurple}
+\setbeamercolor{normal text}{fg=black, bg=white}
+\setbeamercolor{alerted text}{fg=red!75!black}
+
+% =========================
+%  Palettes
+% =========================
+\setbeamercolor{palette primary}{bg=NKPurple, fg=white}
+\setbeamercolor{palette secondary}{bg=NKPurpleDark, fg=white}
+\setbeamercolor{palette tertiary}{bg=NKPurpleLight, fg=white}
+\setbeamercolor{palette quaternary}{bg=NKPurpleVeryLight, fg=NKPurple}
+
+% =========================
+%  Headline / Footline
+% =========================
+\setbeamercolor{headline}{fg=NKPurple, bg=white}
+\setbeamercolor{section in head/foot}{fg=NKPurple, bg=white}
+\setbeamercolor{subsection in head/foot}{fg=NKPurpleDark, bg=white}
+\setbeamercolor{footline}{fg=white, bg=NKPurple}
+\setbeamercolor{author in head/foot}{fg=white, bg=NKPurple}
+\setbeamercolor{title in head/foot}{fg=white, bg=NKPurple}
+\setbeamercolor{date in head/foot}{fg=white, bg=NKPurple}
+
+% =========================
+%  Frame title
+% =========================
+\setbeamercolor{frametitle}{fg=NKPurple, bg=white}
+\setbeamercolor{framesubtitle}{fg=NKPurpleLight}
+\setbeamercolor{frametitle accent}{bg=NKPurple}
+
+% =========================
+%  Progress bar
+% =========================
+\setbeamercolor{progress bar}{fg=NKPurple, bg=NKLightGray}
+
+% =========================
+%  Blocks
+% =========================
+\setbeamercolor{block title}{bg=NKPurple, fg=white}
+\setbeamercolor{block body}{bg=NKPurpleVeryLight, fg=black}
+\setbeamercolor{block title alerted}{bg=red!70!black, fg=white}
+\setbeamercolor{block body alerted}{bg=red!5, fg=black}
+\setbeamercolor{block title example}{bg=teal!70!black, fg=white}
+\setbeamercolor{block body example}{bg=teal!5, fg=black}
+
+% =========================
+%  Items
+% =========================
+\setbeamercolor{itemize item}{fg=NKPurple}
+\setbeamercolor{itemize subitem}{fg=NKPurple!80}
+\setbeamercolor{itemize subsubitem}{fg=NKPurple!60}
+\setbeamercolor{enumerate item}{fg=NKPurple}
+\setbeamercolor{enumerate subitem}{fg=NKPurple!80}
+\setbeamercolor{enumerate subsubitem}{fg=NKPurple!60}
+
+% =========================
+%  Table of Contents
+% =========================
+\setbeamercolor{section in toc}{fg=NKPurple}
+\setbeamercolor{subsection in toc}{fg=NKPurpleDark}
+\setbeamercolor{section number projected}{bg=NKPurple, fg=white}
+
+% =========================
+%  Title page
+% =========================
+\setbeamercolor{title}{fg=NKPurple}
+\setbeamercolor{subtitle}{fg=NKPurpleDark}
+\setbeamercolor{author}{fg=NKDarkGray}
+\setbeamercolor{institute}{fg=NKDarkGray}
+\setbeamercolor{date}{fg=NKDarkGray}
+
+% =========================
+%  Footnote (for citations)
+% =========================
+\setbeamercolor{footnote}{fg=NKDarkGray}
+\setbeamercolor{footnote mark}{fg=NKPurple}
+
+% =========================
+%  Bibliography
+% =========================
+\setbeamercolor{bibliography entry author}{fg=NKPurple}
+\setbeamercolor{bibliography entry title}{fg=black}
+\setbeamercolor{bibliography entry location}{fg=NKDarkGray}
+\setbeamercolor{bibliography entry note}{fg=NKDarkGray}
+\setbeamercolor{bibliography item}{fg=NKPurple}
+
+\mode<all>

@@ -1,0 +1,356 @@
+% !TEX program = xelatex
+% ============================================================
+%  Nankai University — Academic Presentation Template
+%  Compile:  xelatex main && biber main && xelatex main && xelatex main
+% ============================================================
+\documentclass[aspectratio=169, UTF8]{ctexbeamer}
+
+% ---- Load theme (sty files live in style/) ----
+\makeatletter
+\providecommand*\input@path{}
+\g@addto@macro\input@path{{style/}}
+\makeatother
+
+\usetheme{Nankai}
+
+% -- Font (Thank You Page) --
+\usepackage{calligra}
+
+% ============================================================
+%  Common CS packages
+% ============================================================
+
+% -- Math --
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{bm}
+
+% -- Algorithms / Pseudocode --
+\usepackage[ruled, linesnumbered, vlined]{algorithm2e}
+
+% -- Code Listings --
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{NKPurple}\bfseries,
+  commentstyle=\color{NKGray}\itshape,
+  stringstyle=\color{NKPurpleLight},
+  numbers=left,
+  numberstyle=\tiny\color{NKGray},
+  numbersep=5pt,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{NKPurple!30},
+  backgroundcolor=\color{NKPurpleVeryLight},
+  breaklines=true,
+  tabsize=2,
+  showstringspaces=false,
+}
+
+% -- Tables --
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{makecell}
+
+% -- Subfigures --
+\usepackage{subcaption}
+
+% -- Appendix page numbering --
+\usepackage{appendixnumberbeamer}
+
+% -- Bibliography (footnote-style citations) --
+\usepackage[backend=biber,
+            style=numeric-comp,
+            sorting=none,
+            maxbibnames=2,
+            giveninits=true,
+            doi=false, isbn=false, url=false]{biblatex}
+\addbibresource{references.bib}
+
+% -- Make footnote citations tiny --
+\setbeamertemplate{footnote}{%
+  \parindent 0em\noindent%
+  \raggedright%
+  \usebeamercolor{footnote}%
+  \usebeamerfont{footnote}%
+  \hbox to 1.2em{\hfil\insertfootnotemark}%
+  \insertfootnotetext\par%
+}
+
+% -- Common math operators --
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\softmax}{softmax}
+
+% ============================================================
+%  Metadata
+% ============================================================
+\title[学术汇报简称]{基于大语言模型的知识图谱构建方法研究}
+\subtitle{博士研究生学术汇报}
+\author[张三]{张\;三}
+\institute[南开大学]{南开大学\quad 计算机学院}
+\date{\today}
+% \date{2026 年 5 月 24 日}   % uncomment to set a fixed date
+
+% ---- Show TOC at each section start ----
+\AtBeginSection[]{%
+  \begin{frame}{目录}
+    \tableofcontents[currentsection]
+  \end{frame}
+}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ------ Title page ------
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+
+% ------ Table of contents ------
+\begin{frame}{目录}
+  \tableofcontents
+\end{frame}
+
+% ============================================================
+\section{背景介绍}
+% ============================================================
+
+\begin{frame}{研究背景}
+  \begin{itemize}
+    \item 知识图谱（Knowledge Graph）是人工智能的重要基础设施
+    \item 大语言模型（LLM）为知识图谱构建提供了新的范式\footfullcite{wei2022chain}
+    \item 现有方法面临的主要挑战：
+    \begin{itemize}
+      \item 实体识别与链接的准确率有待提升
+      \item 关系抽取在长尾分布下效果不佳
+      \item 缺乏统一的端到端构建框架
+    \end{itemize}
+  \end{itemize}
+
+  \vspace{0.5em}
+  \begin{nkremark}[title={}]
+    本研究致力于结合 LLM 的语义理解能力，构建高质量的领域知识图谱。
+  \end{nkremark}
+\end{frame}
+
+\begin{frame}{基本概念}
+  \begin{nkdefinition}[title={知识图谱 (Knowledge Graph)}]
+    知识图谱是一种用图结构来建模和存储现实世界中实体及其关系的技术，
+    通常表示为三元组集合 $\mathcal{G} = \{(h, r, t)\}$，
+    其中 $h, t \in \mathcal{E}$（实体集），$r \in \mathcal{R}$（关系集）。
+  \end{nkdefinition}
+
+  \vspace{0.5em}
+
+  \begin{nktheorem}[title={TransE 评分函数}]
+    对于正确的三元组 $(h, r, t)$，嵌入向量满足
+    $\bm{h} + \bm{r} \approx \bm{t}$，
+    即评分函数 $f(h,r,t) = \|\bm{h} + \bm{r} - \bm{t}\|$ 趋近于零。\footfullcite{bordes2013translating}
+  \end{nktheorem}
+\end{frame}
+
+% ============================================================
+\section{相关工作}
+% ============================================================
+
+\begin{frame}{相关工作概述}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{传统方法}
+        \begin{enumerate}
+          \item 基于规则的抽取方法
+          \item 基于统计模型的方法
+          \item 基于深度学习的方法
+        \end{enumerate}
+      \end{block}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \begin{exampleblock}{LLM-based 方法}
+        \begin{enumerate}
+          \item Prompt Engineering
+          \item Instruction Tuning
+          \item In-context Learning
+        \end{enumerate}
+      \end{exampleblock}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.5em}
+
+  \begin{nkhighlight}
+    \textbf{Research Gap:} 现有 LLM 方法在 \alert{低资源场景} 和 \alert{跨领域迁移} 方面仍存在不足。
+  \end{nkhighlight}
+\end{frame}
+
+% ============================================================
+\section{研究方法}
+% ============================================================
+
+\begin{frame}{模型框架}
+  核心思想：利用 LLM 的上下文学习能力，通过 \textbf{检索增强生成}
+  (Retrieval-Augmented Generation)\footfullcite{lewis2020rag} 实现知识三元组的精确抽取。
+
+  \vspace{0.5em}
+
+  目标函数：
+  \begin{equation}
+    \mathcal{L} = -\sum_{(h,r,t) \in \mathcal{G}}
+      \log P_\theta(t \mid h, r, \mathcal{C})
+      + \lambda \|\theta\|_2^2
+  \end{equation}
+
+  \vspace{0.3em}
+
+  \begin{nklemma}[title={收敛性保证}]
+    在学习率 $\eta < \frac{2}{L}$（$L$ 为 Lipschitz 常数）的条件下，
+    上述优化过程以 $O(1/\sqrt{T})$ 的速率收敛。
+  \end{nklemma}
+\end{frame}
+
+\begin{frame}{算法流程}
+  \vspace{-0.5em}
+  \begin{algorithm}[H]
+    \small
+    \caption{RAG-based Knowledge Extraction}
+    \SetAlgoLined
+    \KwIn{Document set $\mathcal{D}$, LLM $\mathcal{M}$, Knowledge base $\mathcal{K}$}
+    \KwOut{Knowledge Graph $\mathcal{G}$}
+    $\mathcal{G} \gets \emptyset$\;
+    \ForEach{$d \in \mathcal{D}$}{
+      $\mathcal{C} \gets \text{Retrieve}(\mathcal{K}, d)$;~~%
+      $\text{triples} \gets \mathcal{M}(d, \mathcal{C})$\;
+      \ForEach{$(h, r, t) \in \text{triples}$}{
+        \lIf{$\text{Verify}(h, r, t, \mathcal{K})$}{$\mathcal{G} \gets \mathcal{G} \cup \{(h, r, t)\}$}
+      }
+    }
+    \Return{$\mathcal{G}$}\;
+  \end{algorithm}
+\end{frame}
+
+\begin{frame}[fragile]{代码示例}
+  \begin{lstlisting}[language=Python, caption={LLM Extraction Pipeline}]
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+def extract_triples(text: str, model, tokenizer) -> list:
+    """Extract knowledge triples from text using LLM."""
+    prompt = f"Extract (head, relation, tail) from:\n{text}"
+    inputs = tokenizer(prompt, return_tensors="pt")
+    outputs = model.generate(**inputs, max_new_tokens=256)
+    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    return parse_triples(result)
+  \end{lstlisting}
+\end{frame}
+
+% ============================================================
+\section{实验结果}
+% ============================================================
+
+\begin{frame}{实验设置与结果}
+  \begin{table}[h]
+    \centering
+    \caption{不同方法在 NYT 数据集上的性能对比}
+    \begin{tabular}{lccc}
+      \toprule
+      \textbf{方法} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\
+      \midrule
+      CasRel         & 89.7 & 89.5 & 89.6 \\
+      TPLinker       & 91.3 & 90.0 & 90.7 \\
+      GPT-3.5 (ICL)  & 85.2 & 82.1 & 83.6 \\
+      \midrule
+      \textbf{Ours}  & \textbf{93.1} & \textbf{91.8} & \textbf{92.4} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+
+  \begin{nkhighlight}
+    \textbf{Key:} 在 F1 指标上超越所有基线；检索增强策略显著提升了 Recall（+9.7\% vs.\ ICL baseline）。
+  \end{nkhighlight}
+\end{frame}
+
+\begin{frame}{实验分析}
+  \begin{figure}
+    \begin{subfigure}[b]{0.47\textwidth}
+      \centering
+      \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}
+        \color{NKDarkGray}\small Precision-Recall Curve\vspace{2em}}}
+      \caption{P-R 曲线}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.47\textwidth}
+      \centering
+      \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}
+        \color{NKDarkGray}\small Ablation Study\vspace{2em}}}
+      \caption{消融实验}
+    \end{subfigure}
+    \caption{实验结果详细分析}
+  \end{figure}
+\end{frame}
+
+% ============================================================
+\section{总结与展望}
+% ============================================================
+
+\begin{frame}{总结与展望}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{block}{主要贡献}
+        \begin{itemize}
+          \item 提出了 RAG-based 知识图谱构建框架
+          \item 设计了三元组验证机制
+          \item 在多个数据集上取得 SOTA 结果
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \begin{alertblock}{未来工作}
+        \begin{itemize}
+          \item 探索多模态知识抽取
+          \item 研究增量式图谱更新
+          \item 扩展到更多领域
+        \end{itemize}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ------ References ------
+\begin{frame}[allowframebreaks]{参考文献}
+  \printbibliography[heading=none]
+\end{frame}
+
+% ------ Thank you page ------
+\begin{frame}[plain]
+  \begin{center}
+    \vfill
+    \includegraphics[height=2.5cm]{\nkresourcepath NK-Emblem.png}
+
+    \vskip 0.8em
+    {\color{NKPurple}\rule{0.3\paperwidth}{0.6pt}}
+    \vskip 0.6em
+
+    {\LARGE\calligra\usebeamercolor[fg]{title}Thank You!}
+    \vskip 0.4em
+
+    \vskip 0.15em
+    {\small\color{NKDarkGray}\insertauthor}
+
+    \vskip 0.15em
+    {\small\color{NKGray}\insertinstitute}
+
+    \vskip 0.15em
+    {\small\color{NKGray}\insertdate}
+
+    \vskip 0.2em
+    {\color{NKPurple}\rule{0.3\paperwidth}{0.6pt}}
+    \vskip 0.4em
+
+    {\small\color{NKDarkGray} 欢迎批评指正 \quad$\cdot$\quad Q\,\&\,A}
+    \vfill
+  \end{center}
+\end{frame}
+
+\end{document}

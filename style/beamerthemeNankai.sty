@@ -1,0 +1,27 @@
+% ============================================================
+%  Nankai University Beamer Theme
+%  beamerthemeNankai.sty — main theme loader
+% ============================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerthemeNankai}[2025/05/24 Nankai University Beamer Theme]
+
+\mode<presentation>
+
+% Resource path — redefine BEFORE \usetheme{Nankai} if images live elsewhere
+\providecommand{\nkresourcepath}{resources/}
+
+% Load sub-themes
+\usecolortheme{Nankai}
+\usefonttheme{Nankai}
+\useinnertheme{Nankai}
+\useoutertheme{Nankai}
+
+% Disable default navigation symbols and sidebars
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{sidebar left}{}
+\setbeamertemplate{sidebar right}{}
+
+% Numbered captions (figures & tables)
+\setbeamertemplate{caption}[numbered]
+
+\mode<all>

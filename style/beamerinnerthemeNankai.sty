@@ -1,0 +1,175 @@
+% ============================================================
+%  Nankai University Beamer Inner Theme
+%  beamerinnerthemeNankai.sty — title page, blocks, items, boxes
+% ============================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerinnerthemeNankai}[2025/05/24 Nankai Inner Theme]
+
+\mode<presentation>
+
+\RequirePackage{tikz}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{skins, breakable}
+
+% =========================================================
+%  Title page
+% =========================================================
+\defbeamertemplate*{title page}{Nankai}{%
+  \vfill
+  \begin{centering}
+    % university logo
+    \includegraphics[height=2cm]{\nkresourcepath NKU.png}\par
+    \vskip 0.8em
+    % decorative rule
+    {\color{NKPurple}\rule{0.6\paperwidth}{0.8pt}}\par
+    \vskip 0.6em
+    % title
+    {\usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle\par}%
+    \ifx\insertsubtitle\empty\else
+      \vskip 0.25em
+      {\usebeamerfont{subtitle}\usebeamercolor[fg]{subtitle}\insertsubtitle\par}%
+    \fi
+    \vskip 0.6em
+    {\color{NKPurple}\rule{0.4\paperwidth}{0.5pt}}\par
+    \vskip 0.6em
+    % author / institute / date
+    {\usebeamerfont{author}\usebeamercolor[fg]{author}\insertauthor\par}%
+    \vskip 0.25em
+    {\usebeamerfont{institute}\usebeamercolor[fg]{institute}\insertinstitute\par}%
+    \vskip 0.25em
+    {\usebeamerfont{date}\usebeamercolor[fg]{date}\insertdate\par}%
+    \vskip 0.8em
+    % motto
+    \includegraphics[height=0.5cm]{\nkresourcepath NK-Motto.png}\par
+  \end{centering}
+  \vfill
+}
+
+% =========================================================
+%  Item shapes
+% =========================================================
+\setbeamertemplate{itemize item}{\small\raise1pt\hbox{\textbullet}}
+\setbeamertemplate{itemize subitem}{\small\raise0.5pt\hbox{$\circ$}}
+\setbeamertemplate{itemize subsubitem}{\scriptsize\raise0.5pt\hbox{$\blacksquare$}}
+
+\setbeamertemplate{enumerate item}{\insertenumlabel.}
+\setbeamertemplate{enumerate subitem}{\insertenumlabel.\insertsubenumlabel}
+
+% =========================================================
+%  Blocks — rounded, no shadow
+% =========================================================
+\setbeamertemplate{blocks}[rounded][shadow=false]
+
+% =========================================================
+%  Table of Contents
+% =========================================================
+\setbeamertemplate{section in toc}[circle]
+\setbeamertemplate{subsection in toc}[default]
+
+% =========================================================
+%  Custom tcolorbox environments
+% =========================================================
+
+% ---- General purpose box ----
+\newtcolorbox{nkbox}[1][]{%
+  enhanced,
+  colback=NKPurpleVeryLight,
+  colframe=NKPurple,
+  fonttitle=\bfseries,
+  boxrule=0.8pt,
+  arc=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  #1
+}
+
+% ---- Theorem ----
+\newtcolorbox{nktheorem}[1][]{%
+  enhanced,
+  colback=NKPurple!5!white,
+  colframe=NKPurple,
+  fonttitle=\bfseries,
+  coltitle=white,
+  colbacktitle=NKPurple,
+  boxrule=0.6pt,
+  arc=2pt,
+  toptitle=2pt, bottomtitle=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  title={Theorem},
+  #1
+}
+
+% ---- Definition ----
+\newtcolorbox{nkdefinition}[1][]{%
+  enhanced,
+  colback=blue!3!white,
+  colframe=NKPurple!60!blue,
+  fonttitle=\bfseries,
+  coltitle=white,
+  colbacktitle=NKPurple!60!blue,
+  boxrule=0.6pt,
+  arc=2pt,
+  toptitle=2pt, bottomtitle=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  title={Definition},
+  #1
+}
+
+% ---- Lemma ----
+\newtcolorbox{nklemma}[1][]{%
+  enhanced,
+  colback=NKPurple!3!white,
+  colframe=NKPurpleLight,
+  fonttitle=\bfseries,
+  coltitle=white,
+  colbacktitle=NKPurpleLight,
+  boxrule=0.6pt,
+  arc=2pt,
+  toptitle=2pt, bottomtitle=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  title={Lemma},
+  #1
+}
+
+% ---- Proof ----
+\newtcolorbox{nkproof}[1][]{%
+  enhanced,
+  colback=gray!3!white,
+  colframe=NKDarkGray,
+  fonttitle=\bfseries\itshape,
+  coltitle=NKDarkGray,
+  colbacktitle=gray!10!white,
+  boxrule=0.4pt,
+  arc=1pt,
+  toptitle=2pt, bottomtitle=2pt,
+  left=6pt, right=6pt, top=4pt, bottom=4pt,
+  title={Proof},
+  #1
+}
+
+% ---- Remark (left-border accent) ----
+\newtcolorbox{nkremark}[1][]{%
+  enhanced,
+  colback=NKPurple!3!white,
+  colframe=NKPurple!3!white,
+  borderline west={2.5pt}{0pt}{NKPurple},
+  fonttitle=\bfseries,
+  coltitle=NKPurple,
+  boxrule=0pt,
+  arc=0pt,
+  left=8pt, right=6pt, top=4pt, bottom=4pt,
+  title={Remark},
+  #1
+}
+
+% ---- Highlight / callout box (no title by default) ----
+\newtcolorbox{nkhighlight}[1][]{%
+  enhanced,
+  colback=NKPurple!8!white,
+  colframe=NKPurple,
+  boxrule=1pt,
+  arc=3pt,
+  left=8pt, right=8pt, top=6pt, bottom=6pt,
+  #1
+}
+
+\mode<all>

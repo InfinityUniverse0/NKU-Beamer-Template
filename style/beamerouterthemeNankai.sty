@@ -1,0 +1,123 @@
+% ============================================================
+%  Nankai University Beamer Outer Theme
+%  beamerouterthemeNankai.sty — headline, frametitle, footline
+% ============================================================
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerouterthemeNankai}[2025/05/24 Nankai Outer Theme]
+
+\mode<presentation>
+
+\RequirePackage{tikz}
+
+% =========================================================
+%  Headline — section navigation with adaptive widths
+% =========================================================
+\defbeamertemplate*{headline}{Nankai}{%
+  \leavevmode%
+  \vbox{%
+    \begin{beamercolorbox}[wd=\paperwidth, ht=3.5ex, dp=1.5ex]{headline}%
+      \insertsectionnavigationhorizontal{\paperwidth}%
+        {\hskip1em\hfil}{\hfil\hskip1em}%
+    \end{beamercolorbox}%
+    \nointerlineskip
+    {\color{NKPurple}\hrule height 0.4pt}%
+  }%
+}
+
+% Non-current sections appear dimmed
+\setbeamertemplate{section in head/foot shaded}[default][30]
+
+% =========================================================
+%  Frame title — clean design with small emblem
+% =========================================================
+\defbeamertemplate*{frametitle}{Nankai}{%
+  \vbox{%
+    \begin{beamercolorbox}[wd=\paperwidth, leftskip=0.8em, rightskip=0.8em,
+        sep=0.10em]{frametitle}%
+      \raisebox{-0.12cm}[0pt][0pt]{%
+        \includegraphics[height=0.55cm]{\nkresourcepath NK-Emblem.png}}%
+      \hskip 0.5em%
+      \usebeamerfont{frametitle}\usebeamercolor[fg]{frametitle}%
+      \strut\insertframetitle%
+      \ifx\insertframesubtitle\empty\else
+        \quad{\usebeamerfont{framesubtitle}\usebeamercolor[fg]{framesubtitle}%
+          \insertframesubtitle}%
+      \fi
+      \strut\par%
+    \end{beamercolorbox}%
+    \nointerlineskip
+    % accent rule below frame title
+    \begin{beamercolorbox}[wd=\paperwidth, ht=1.5pt, dp=0pt]{frametitle accent}%
+    \end{beamercolorbox}%
+  }%
+}
+
+% =========================================================
+%  Footline — adaptive-width layout
+%  Each item uses max(default-width, natural-width).
+%  \hfill between items absorbs remaining space.
+% =========================================================
+\newsavebox{\nk@footbox}
+
+\newcommand{\nk@foot@item}[3]{%
+  % #1 = default width, #2 = content, #3 = beamer font name
+  \sbox\nk@footbox{\usebeamerfont{#3}\color{white}\strut #2}%
+  \ifdim\wd\nk@footbox>#1\relax
+    % content overflows default: use natural width
+    \hbox{\usebeamerfont{#3}\color{white}\strut #2}%
+  \else
+    % content fits: use default width, centered
+    \hbox to #1{\hss\usebeamerfont{#3}\color{white}\strut #2\hss}%
+  \fi
+}
+
+\defbeamertemplate*{footline}{Nankai}{%
+  \leavevmode%
+  \vbox{%
+    \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1ex]{footline}%
+      \hskip 0.8em%
+      \nk@foot@item{.18\paperwidth}{\insertshortinstitute}{author in head/foot}%
+      \hfill
+      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
+      \hfill
+      \nk@foot@item{.36\paperwidth}{\insertshorttitle}{title in head/foot}%
+      \hfill
+      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
+      \hfill
+      \nk@foot@item{.20\paperwidth}{\insertshortauthor}{author in head/foot}%
+      \hfill
+      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
+      \hfill
+      \nk@foot@item{.10\paperwidth}%
+        {\insertframenumber{}\,/\,\inserttotalframenumber}{date in head/foot}%
+      \hskip 0.8em%
+    \end{beamercolorbox}%
+    \nointerlineskip
+    % progress bar
+    \nk@progressbar
+  }%
+}
+
+% =========================================================
+%  Progress bar (Metropolis-style)
+% =========================================================
+\newlength{\nk@progressbar@width}
+
+\newcommand{\nk@progressbar}{%
+  \begingroup
+  % Guard against zero total frames (first pass)
+  \ifnum\inserttotalframenumber<1\relax
+    \setlength{\nk@progressbar@width}{0pt}%
+  \else
+    \pgfmathsetlength{\nk@progressbar@width}{%
+      \the\paperwidth * \insertframenumber / \inserttotalframenumber}%
+  \fi
+  \begin{tikzpicture}
+    \useasboundingbox (0, 0) rectangle (\the\paperwidth, 0.6pt);
+    \fill[NKLightGray] (0, 0) rectangle (\the\paperwidth, 0.6pt);
+    \fill[NKPurple]    (0, 0) rectangle (\the\nk@progressbar@width, 0.6pt);
+  \end{tikzpicture}%
+  \endgroup
+}
+
+\mode<all>
