@@ -84,21 +84,39 @@
 }
 
 \newcommand{\nk@renderfn}[2]{%
-  \noindent\hskip 1.5em
-  \makebox[1em][r]{\textsuperscript{#1}\,}#2\par
+  \textsuperscript{#1}\,#2\par
 }
+
+% Render saved footnotes as a TikZ overlay above the footline.
+% Measures the actual content height to position correctly.
+\newsavebox{\nk@fnbox}
 
 \addtobeamertemplate{footline}{%
   \ifx\nk@savedfoots\empty\else
-    \vskip 2pt
-    \hbox to \paperwidth{%
-      \hskip 1.5em{\color{NKGray}\rule{0.3\paperwidth}{0.2pt}}\hss}%
-    \vskip 2pt
-    \begingroup
-    \usebeamerfont{footnote}\usebeamercolor[fg]{footnote}%
-    \nk@savedfoots
-    \endgroup
-    \vskip 2pt
+    % First measure the actual height of the footnote content
+    \sbox\nk@fnbox{%
+      \parbox{\dimexpr\paperwidth-3em\relax}{%
+        \usebeamerfont{footnote}%
+        \setlength{\parskip}{0pt}\setlength{\baselineskip}{6pt}%
+        \nk@savedfoots
+      }%
+    }%
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[anchor=south west, inner sep=0pt,
+            text width=\dimexpr\paperwidth-3em\relax]
+        at ([xshift=1.5em,
+             yshift=3.5ex+\the\ht\nk@fnbox+\the\dp\nk@fnbox+5.5pt]%
+            current page.south west) {%
+          {\color{NKGray}\rule{0.3\paperwidth}{0.2pt}}%
+        };
+      \node[anchor=south west, inner sep=0pt,
+            text width=\dimexpr\paperwidth-3em\relax]
+        at ([xshift=1.5em, yshift=3.5ex+1.5pt]current page.south west) {%
+          \usebeamerfont{footnote}\usebeamercolor[fg]{footnote}%
+          \setlength{\parskip}{0pt}\setlength{\baselineskip}{6pt}%
+          \nk@savedfoots
+        };
+    \end{tikzpicture}%
   \fi
   \gdef\nk@savedfoots{}%
 }{}
@@ -145,8 +163,9 @@
 
 \begin{frame}{研究背景}
   \begin{itemize}
-    \item 知识图谱（Knowledge Graph）是人工智能的重要基础设施
+    \item 知识图谱（Knowledge Graph）是人工智能的重要基础设施\footfullcite{bordes2013translating}
     \item 大语言模型（LLM）为知识图谱构建提供了新的范式\footfullcite{wei2022chain}
+    \item 检索增强生成方法近年来取得了显著进展\footfullcite{lewis2020rag}
     \item 现有方法面临的主要挑战：
     \begin{itemize}
       \item 实体识别与链接的准确率有待提升
