@@ -52,9 +52,20 @@
 \usepackage{multirow}
 \usepackage{array}
 \usepackage{makecell}
+\usepackage{tabularx}
+
+% -- Units and aligned numeric columns --
+\usepackage{siunitx}
+\sisetup{detect-all}
 
 % -- Subfigures --
 \usepackage{subcaption}
+
+% -- Diagrams and plots (no external images or shell escape needed) --
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
 
 % -- Appendix page numbering --
 \usepackage{appendixnumberbeamer}
@@ -68,58 +79,8 @@
             doi=false, isbn=false, url=false]{biblatex}
 \addbibresource{references.bib}
 
-% -- Frame-level footnotes: always at page bottom, not inside blocks --
-%    Saves citations globally; renders them above the footline bar.
-%    Works uniformly inside and outside tcolorbox environments.
-\makeatletter
-\gdef\nk@savedfoots{}
-
-\renewcommand{\footfullcite}[1]{%
-  \stepcounter{footnote}%
-  \textsuperscript{\tiny\color{NKPurple}\arabic{footnote}}%
-  \xdef\nk@savedfoots{%
-    \unexpanded\expandafter{\nk@savedfoots}%
-    \noexpand\nk@renderfn{\the\value{footnote}}{\noexpand\fullcite{#1}}%
-  }%
-}
-
-\newcommand{\nk@renderfn}[2]{%
-  \textsuperscript{#1}\,#2\par
-}
-
-% Render saved footnotes as a TikZ overlay above the footline.
-% Measures the actual content height to position correctly.
-\newsavebox{\nk@fnbox}
-
-\addtobeamertemplate{footline}{%
-  \ifx\nk@savedfoots\empty\else
-    % First measure the actual height of the footnote content
-    \sbox\nk@fnbox{%
-      \parbox{\dimexpr\paperwidth-3em\relax}{%
-        \usebeamerfont{footnote}%
-        \setlength{\parskip}{0pt}\setlength{\baselineskip}{6pt}%
-        \nk@savedfoots
-      }%
-    }%
-    \begin{tikzpicture}[remember picture, overlay]
-      \node[anchor=south west, inner sep=0pt,
-            text width=\dimexpr\paperwidth-3em\relax]
-        at ([xshift=1.5em,
-             yshift=3.5ex+\the\ht\nk@fnbox+\the\dp\nk@fnbox+5.5pt]%
-            current page.south west) {%
-          {\color{NKGray}\rule{0.3\paperwidth}{0.2pt}}%
-        };
-      \node[anchor=south west, inner sep=0pt,
-            text width=\dimexpr\paperwidth-3em\relax]
-        at ([xshift=1.5em, yshift=3.5ex+1.5pt]current page.south west) {%
-          \usebeamerfont{footnote}\usebeamercolor[fg]{footnote}%
-          \setlength{\parskip}{0pt}\setlength{\baselineskip}{6pt}%
-          \nk@savedfoots
-        };
-    \end{tikzpicture}%
-  \fi
-  \gdef\nk@savedfoots{}%
-}{}
+% -- Full references in native Beamer frame footnotes (also inside boxes) --
+\usepackage{nankaibib}
 
 % -- Common math operators --
 \DeclareMathOperator*{\argmax}{arg\,max}
@@ -136,6 +97,9 @@
 \date{\today}
 % \date{2026 年 5 月 24 日}   % uncomment to set a fixed date
 
+% All experiments below use synthetic data for typesetting demonstrations.
+% They are not results reported by the cited papers.
+
 % ---- Show TOC at each section start ----
 \AtBeginSection[]{%
   \begin{frame}{目录}
@@ -148,7 +112,7 @@
 % ============================================================
 
 % ------ Title page ------
-\begin{frame}[plain]
+\begin{frame}[plain,noframenumbering]
   \titlepage
 \end{frame}
 
@@ -163,10 +127,10 @@
 
 \begin{frame}{研究背景}
   \begin{itemize}
-    \item 知识图谱（Knowledge Graph）是人工智能的重要基础设施\footfullcite{bordes2013translating}
-    \item 大语言模型（LLM）为知识图谱构建提供了新的范式\footfullcite{wei2022chain}
-    \item 检索增强生成方法近年来取得了显著进展\footfullcite{lewis2020rag}
-    \item 现有方法面临的主要挑战：
+    \item 知识图谱嵌入通过向量表示实体与关系\footfullcite{bordes2013translating}
+    \item 思维链提示为大语言模型（LLM）推理提供了一种方法\footfullcite{wei2022chain}
+    \item 检索增强生成结合外部知识与语言模型\footfullcite{lewis2020rag}
+    \item 本示例关注的研究问题：
     \begin{itemize}
       \item 实体识别与链接的准确率有待提升
       \item 关系抽取在长尾分布下效果不佳
@@ -176,7 +140,20 @@
 
   \vspace{0.5em}
   \begin{nkremark}[title={}]
-    本研究致力于结合 LLM 的语义理解能力，构建高质量的领域知识图谱。
+    示例主题：结合 LLM 的语义理解能力，探索领域知识图谱构建。
+  \end{nkremark}
+\end{frame}
+
+\begin{frame}{任务定义与示例约定}
+  \begin{nkbox}[title={从文档到知识三元组}]
+    \textbf{输入：}文档集合 $\mathcal{D}$ 与可检索知识库 $\mathcal{K}$。\\[0.3em]
+    \textbf{输出：}经过验证的三元组集合
+    $\widehat{\mathcal{G}} = \{(h,r,t)\}$。\\[0.3em]
+    \textbf{评价：}Precision、Recall、F1 与推理时延。
+  \end{nkbox}
+  \begin{nkremark}[title={如何阅读本示例}]
+    后续方法、代码与\alert{合成实验数据}用于演示学术汇报排版，
+    不代表真实实验结论。引用的论文用于介绍相关概念。
   \end{nkremark}
 \end{frame}
 
@@ -189,11 +166,11 @@
 
   \vspace{0.5em}
 
-  \begin{nktheorem}[title={TransE 评分函数}]
-    对于正确的三元组 $(h, r, t)$，嵌入向量满足
-    $\bm{h} + \bm{r} \approx \bm{t}$，
-    即评分函数 $f(h,r,t) = \|\bm{h} + \bm{r} - \bm{t}\|$ 趋近于零。\footfullcite{bordes2013translating}
-  \end{nktheorem}
+  \begin{nkbox}[title={TransE 评分函数}]
+    TransE 用平移关系 $\bm{h}+\bm{r}\approx\bm{t}$ 建模三元组，
+    定义距离评分 $f(h,r,t)=\|\bm{h}+\bm{r}-\bm{t}\|_2$；
+    较小的距离表示更高的模型可信度。\footfullcite{bordes2013translating}
+  \end{nkbox}
 \end{frame}
 
 % ============================================================
@@ -225,12 +202,13 @@
   \vspace{0.5em}
 
   \begin{nkhighlight}
-    \textbf{Research Gap:} 现有 LLM 方法在 \alert{低资源场景} 和 \alert{跨领域迁移} 方面仍存在不足。
+    \textbf{研究切入点：}如何评价检索与验证模块在\alert{低资源场景}下的作用？
   \end{nkhighlight}
 \end{frame}
 
 % ============================================================
-\section{研究方法}
+% The optional short title is used in the headline; the TOC keeps the full title.
+\section[研究方法]{研究方法与理论分析}
 % ============================================================
 
 \begin{frame}{模型框架}
@@ -248,10 +226,63 @@
 
   \vspace{0.3em}
 
-  \begin{nklemma}[title={收敛性保证}]
-    在学习率 $\eta < \frac{2}{L}$（$L$ 为 Lipschitz 常数）的条件下，
-    上述优化过程以 $O(1/\sqrt{T})$ 的速率收敛。
+  \begin{nkremark}[title={建模说明}]
+    $\mathcal{C}$ 为检索上下文，$\lambda\geq 0$ 为正则化系数。
+    本目标函数仅作数学排版示例；具体优化性质需结合模型与假设分析。
+  \end{nkremark}
+\end{frame}
+
+\begin{frame}{检索、生成与验证}
+  \centering
+  \begin{tikzpicture}[
+      node distance=0.6cm,
+      stage/.style={draw=NKPurple, fill=NKPurpleVeryLight, rounded corners,
+        minimum height=1.1cm, text width=2.5cm, align=center, font=\small},
+      flow/.style={-{Stealth}, thick, NKPurple}]
+    \node[stage] (doc) {输入文档\\$d\in\mathcal{D}$};
+    \node[stage, right=of doc] (retrieve) {相关知识检索\\$\mathcal{C}=R(\mathcal{K},d)$};
+    \node[stage, right=of retrieve] (generate) {候选三元组生成\\$\mathcal{M}(d,\mathcal{C})$};
+    \node[stage, right=of generate] (verify) {一致性验证\\$\widehat{\mathcal{G}}$};
+    \draw[flow] (doc) -- (retrieve);
+    \draw[flow] (retrieve) -- (generate);
+    \draw[flow] (generate) -- (verify);
+  \end{tikzpicture}
+  \par\vspace{1em}
+  \begin{nkhighlight}
+    每个模块分别记录输入、输出与运行时间，便于复现和消融分析。
+  \end{nkhighlight}
+\end{frame}
+
+\begin{frame}{评分函数的稳定性}
+  \begin{nklemma}[title={引理：反三角不等式}]
+    对任意向量 $\bm{x},\bm{y}$ 及同一种范数，
+    $\bigl|\|\bm{x}\|-\|\bm{y}\|\bigr|\leq\|\bm{x}-\bm{y}\|$。
   \end{nklemma}
+  \begin{nktheorem}[title={定理：TransE 距离评分的扰动上界}]
+    设 $f(\bm{h},\bm{r},\bm{t})=\|\bm{h}+\bm{r}-\bm{t}\|_2$。
+    若各嵌入向量的扰动范数均不超过 $\varepsilon$，则
+    \[
+      |f(\bm{h}+\Delta\bm{h},\bm{r}+\Delta\bm{r},\bm{t}+\Delta\bm{t})
+       -f(\bm{h},\bm{r},\bm{t})|\leq 3\varepsilon.
+    \]
+  \end{nktheorem}
+\end{frame}
+
+\begin{frame}{扰动上界的证明}
+  \begin{nkproof}[title={证明：两次应用范数不等式}]
+    记 $\bm{x}=\bm{h}+\bm{r}-\bm{t}$，
+    $\bm{\delta}=\Delta\bm{h}+\Delta\bm{r}-\Delta\bm{t}$。
+    由反三角不等式及三角不等式，
+    \begin{align*}
+      \bigl|\|\bm{x}+\bm{\delta}\|_2-\|\bm{x}\|_2\bigr|
+      &\leq\|\bm{\delta}\|_2\\
+      &\leq\|\Delta\bm{h}\|_2+\|\Delta\bm{r}\|_2+\|\Delta\bm{t}\|_2\\
+      &\leq 3\varepsilon.\qquad\square
+    \end{align*}
+  \end{nkproof}
+  \begin{nkremark}[title={}]
+    该界仅说明距离评分对嵌入扰动的稳定性，不等价于抽取准确率保证。
+  \end{nkremark}
 \end{frame}
 
 \begin{frame}{算法流程}
@@ -275,17 +306,21 @@
 \end{frame}
 
 \begin{frame}[fragile]{代码示例}
-  \begin{lstlisting}[language=Python, caption={LLM Extraction Pipeline}]
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+  \begin{lstlisting}[language=Python, caption={Validate and deduplicate triples (Python 3.9+)}]
+import json
 
-def extract_triples(text: str, model, tokenizer) -> list:
-    """Extract knowledge triples from text using LLM."""
-    prompt = f"Extract (head, relation, tail) from:\n{text}"
-    inputs = tokenizer(prompt, return_tensors="pt")
-    outputs = model.generate(**inputs, max_new_tokens=256)
-    result = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    return parse_triples(result)
+def parse_triples(text: str) -> list[tuple[str, str, str]]:
+    """Parse a JSON array of non-empty string triples."""
+    data = json.loads(text)
+    if not isinstance(data, list):
+        raise ValueError("Expected a JSON array")
+    triples = {
+        tuple(value.strip() for value in item)
+        for item in data
+        if isinstance(item, list) and len(item) == 3
+        and all(isinstance(v, str) and v.strip() for v in item)
+    }
+    return sorted(triples)
   \end{lstlisting}
 \end{frame}
 
@@ -296,42 +331,98 @@ def extract_triples(text: str, model, tokenizer) -> list:
 \begin{frame}{实验设置与结果}
   \begin{table}[h]
     \centering
-    \caption{不同方法在 NYT 数据集上的性能对比}
-    \begin{tabular}{lccc}
+    \small
+    \caption{抽取方法对比（合成数据，仅用于排版演示；指标单位：\%）}
+    \begin{tabular}{ll *{3}{S[table-format=2.1]}}
       \toprule
-      \textbf{方法} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} \\
+      \textbf{分组} & \makecell{方法 / 配置} & {\textbf{Precision}} & {\textbf{Recall}} & {\textbf{F1}} \\
       \midrule
-      CasRel         & 89.7 & 89.5 & 89.6 \\
-      TPLinker       & 91.3 & 90.0 & 90.7 \\
-      GPT-3.5 (ICL)  & 85.2 & 82.1 & 83.6 \\
+      \multirow{2}{*}{基线} & Baseline A & 82.0 & 76.0 & 78.9 \\
+                           & Baseline B & 86.0 & 80.0 & 82.9 \\
       \midrule
-      \textbf{Ours}  & \textbf{93.1} & \textbf{91.8} & \textbf{92.4} \\
+      \multirow{2}{*}{示例模型} & 不使用检索 & 84.0 & 78.0 & 80.9 \\
+                               & 完整流程   & 90.0 & 84.0 & 86.9 \\
       \bottomrule
     \end{tabular}
   \end{table}
 
   \begin{nkhighlight}
-    \textbf{Key:} 在 F1 指标上超越所有基线；检索增强策略显著提升了 Recall（+9.7\% vs.\ ICL baseline）。
+    \textbf{读表示例：}在这组合成数据中，加入检索后 Recall 增加
+    $84.0-78.0=6.0$ 个百分点。真实汇报应补充数据来源与不确定性分析。
   \end{nkhighlight}
 \end{frame}
 
 \begin{frame}{实验分析}
   \begin{figure}
-    \begin{subfigure}[b]{0.47\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
       \centering
-      \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}
-        \color{NKDarkGray}\small Precision-Recall Curve\vspace{2em}}}
-      \caption{P-R 曲线}
+      \begin{tikzpicture}
+        \begin{axis}[width=0.98\linewidth, height=3.6cm,
+          xmin=0, xmax=100, ymin=40, ymax=100,
+          xlabel={Recall (\%)}, ylabel={Precision (\%)},
+          tick label style={font=\scriptsize}, label style={font=\scriptsize},
+          grid=major, grid style={NKLightGray},
+          legend style={font=\tiny, draw=none, at={(0.02,0.02)}, anchor=south west}]
+          \addplot[NKGray, dashed, thick, mark=square*]
+            coordinates {(10,96) (30,91) (50,83) (70,71) (90,52)};
+          \addlegendentry{Baseline}
+          \addplot[NKPurple, thick, mark=*]
+            coordinates {(10,99) (30,97) (50,93) (70,86) (90,72)};
+          \addlegendentry{Demo}
+        \end{axis}
+      \end{tikzpicture}
+      \caption{示例 P-R 曲线}
+      \label{fig:demo-pr}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.47\textwidth}
+    \begin{subfigure}[t]{0.48\textwidth}
       \centering
-      \fbox{\parbox{0.85\textwidth}{\centering\vspace{2em}
-        \color{NKDarkGray}\small Ablation Study\vspace{2em}}}
-      \caption{消融实验}
+      \begin{tikzpicture}
+        \begin{axis}[width=0.98\linewidth, height=3.6cm,
+          ybar, bar width=16pt, ymin=70, ymax=95,
+          symbolic x coords={Base,+R,+R+V}, xtick=data,
+          enlarge x limits=0.3, xlabel={Configuration}, ylabel={F1 (\%)},
+          tick label style={font=\scriptsize}, label style={font=\scriptsize},
+          nodes near coords, every node near coord/.append style={font=\tiny},
+          ymajorgrids, grid style={NKLightGray}]
+          \addplot[fill=NKPurpleLight, draw=NKPurple]
+            coordinates {(Base,80.9) (+R,84.8) (+R+V,86.9)};
+        \end{axis}
+      \end{tikzpicture}
+      \caption{示例消融：检索 R 与验证 V}
+      \label{fig:demo-ablation}
     \end{subfigure}
-    \caption{实验结果详细分析}
+    \caption{合成数据：子图~(\subref{fig:demo-pr}) 与~(\subref{fig:demo-ablation}) 展示不同分析视角}
   \end{figure}
+\end{frame}
+
+% Chinese and English content work together without changing the scheme.
+% Optional: scheme=plain keeps standard Beamer conventions for automatic labels
+% and dates; it does not affect the ability to typeset Chinese or English.
+\begin{frame}{Reproducibility Checklist}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{nkbox}[title={Experimental protocol}]
+        \small
+        \begin{itemize}
+          \item Fix data splits and random seeds.
+          \item Record model and prompt versions.
+          \item Report hardware and latency.
+        \end{itemize}
+      \end{nkbox}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{nkremark}[title={Retrieval baseline}]
+        \small
+        Document the retriever, index, and context budget when evaluating
+        retrieval-augmented generation.\footfullcite[See][\S~2]{lewis2020rag}
+      \end{nkremark}
+    \end{column}
+  \end{columns}
+  \vspace{0.5em}
+  \small Example settings: memory budget \SI{24}{\giga\byte};
+  latency budget \SI{120}{\milli\second} per query.
+  These are illustrative settings.
 \end{frame}
 
 % ============================================================
@@ -341,20 +432,20 @@ def extract_triples(text: str, model, tokenizer) -> list:
 \begin{frame}{总结与展望}
   \begin{columns}[T]
     \begin{column}{0.47\textwidth}
-      \begin{block}{主要贡献}
+      \begin{block}{本示例展示的内容}
         \begin{itemize}
-          \item 提出了 RAG-based 知识图谱构建框架
-          \item 设计了三元组验证机制
-          \item 在多个数据集上取得 SOTA 结果
+          \item 问题定义、公式与证明
+          \item 流程图、伪代码与程序代码
+          \item 实验表格、子图与脚注引用
         \end{itemize}
       \end{block}
     \end{column}
     \begin{column}{0.47\textwidth}
-      \begin{alertblock}{未来工作}
+      \begin{alertblock}{用于真实汇报前}
         \begin{itemize}
-          \item 探索多模态知识抽取
-          \item 研究增量式图谱更新
-          \item 扩展到更多领域
+          \item 替换为真实数据与研究结论
+          \item 补全实验条件和来源
+          \item 核对引用、单位和统计口径
         \end{itemize}
       \end{alertblock}
     \end{column}
@@ -367,7 +458,7 @@ def extract_triples(text: str, model, tokenizer) -> list:
 \end{frame}
 
 % ------ Thank you page ------
-\begin{frame}[plain]
+\begin{frame}[plain,noframenumbering]
   \begin{center}
     \vfill
     \includegraphics[height=2.5cm]{\nkresourcepath NK-Emblem.png}
@@ -395,6 +486,30 @@ def extract_triples(text: str, model, tokenizer) -> list:
     {\small\color{NKDarkGray} 欢迎批评指正 \quad$\cdot$\quad Q\,\&\,A}
     \vfill
   \end{center}
+\end{frame}
+
+% ------ Backup slides: independent numbering via appendixnumberbeamer ------
+\appendix
+\begin{frame}{附录：实验配置记录}
+  \small
+  \begin{table}
+    \centering
+    \caption{可复现实验记录示例（配置值仅作演示）}
+    \begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X@{}}
+      \toprule
+      \textbf{项目} & \textbf{记录内容} \\
+      \midrule
+      随机种子 & $\{7, 21, 42\}$；报告多次运行的均值与标准差 \\
+      检索设置 & Top-$k=5$；固定索引版本、分词方式及上下文截断规则 \\
+      硬件预算 & 显存 \SI{24}{\giga\byte}；记录设备型号与软件版本 \\
+      评价协议 & 按三元组精确匹配；明确 micro / macro 平均及去重规则 \\
+      资源入口 & \url{https://www.nankai.edu.cn} \\
+      \bottomrule
+    \end{tabularx}
+  \end{table}
+  \begin{nkremark}[title={附录编号}]
+    附录使用独立的当前页 / 总页数；封面与致谢页不计入正文页数。
+  \end{nkremark}
 \end{frame}
 
 \end{document}
