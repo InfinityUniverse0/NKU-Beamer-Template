@@ -12,12 +12,54 @@
 % =========================================================
 %  Headline — section navigation with adaptive widths
 % =========================================================
+\newsavebox{\nk@navigationbox}
+\newlength{\nk@navigationwidth}
+
+\newcommand{\nk@navigation}{%
+  \begingroup
+  \setlength{\nk@navigationwidth}{\dimexpr\paperwidth-2em\relax}%
+  % Measure the complete row at its natural width. Each section keeps
+  % its own text width; elastic gaps share any remaining space.
+  \sbox\nk@navigationbox{%
+    \def\slideentry##1##2##3##4##5##6{}%
+    \def\sectionentry##1##2##3##4##5{%
+      \ifnum##5=\c@part\relax
+        \hskip0.7em plus1fill%
+        \hbox{%
+          \def\insertsectionhead{##2}%
+          \def\insertsectionheadnumber{##1}%
+          \def\insertpartheadnumber{##5}%
+          \usebeamerfont{section in head/foot}%
+          \usebeamercolor[fg]{section in head/foot}%
+          \hyperlink{Navigation##3}{%
+            \ifnum\c@section=##1\relax
+              \usebeamertemplate{section in head/foot}%
+            \else
+              \usebeamertemplate{section in head/foot shaded}%
+            \fi}%
+        }%
+        \hskip0.7em plus1fill%
+      \fi}%
+    \dohead
+  }%
+  \hbox to \paperwidth{%
+    \hskip1em%
+    \ifdim\wd\nk@navigationbox>\nk@navigationwidth
+      \resizebox{\nk@navigationwidth}{!}{\usebox\nk@navigationbox}%
+    \else
+      \hbox to \nk@navigationwidth{\hfil\unhbox\nk@navigationbox\hfil}%
+    \fi
+    \hss%
+    \hskip1em%
+  }%
+  \endgroup
+}
+
 \defbeamertemplate*{headline}{Nankai}{%
   \leavevmode%
   \vbox{%
     \begin{beamercolorbox}[wd=\paperwidth, ht=3.5ex, dp=1.5ex]{headline}%
-      \insertsectionnavigationhorizontal{\paperwidth}%
-        {\hskip1em\hfil}{\hfil\hskip1em}%
+      \nk@navigation
     \end{beamercolorbox}%
     \nointerlineskip
     {\color{NKPurple}\hrule height 0.4pt}%
@@ -54,43 +96,88 @@
 
 % =========================================================
 %  Footline — adaptive-width layout
-%  Each item uses max(default-width, natural-width).
-%  \hfill between items absorbs remaining space.
+%  Start with max(default width, natural width). If the row does
+%  not fit, reclaim unused default widths; scale only as a last resort.
 % =========================================================
-\newsavebox{\nk@footbox}
+\newsavebox{\nk@foot@institute}
+\newsavebox{\nk@foot@title}
+\newsavebox{\nk@foot@author}
+\newsavebox{\nk@foot@number}
+\newsavebox{\nk@foot@rowbox}
+\newlength{\nk@foot@available}
+\newlength{\nk@foot@institutewidth}
+\newlength{\nk@foot@titlewidth}
+\newlength{\nk@foot@authorwidth}
+\newlength{\nk@foot@numberwidth}
 
-\newcommand{\nk@foot@item}[3]{%
-  % #1 = default width, #2 = content, #3 = beamer font name
-  \sbox\nk@footbox{\usebeamerfont{#3}\color{white}\strut #2}%
-  \ifdim\wd\nk@footbox>#1\relax
-    % content overflows default: use natural width
-    \hbox{\usebeamerfont{#3}\color{white}\strut #2}%
-  \else
-    % content fits: use default width, centered
-    \hbox to #1{\hss\usebeamerfont{#3}\color{white}\strut #2\hss}%
+\newcommand{\nk@foot@setwidth}[3]{%
+  % #1 = width register, #2 = saved content box, #3 = default width
+  \setlength{#1}{#3}%
+  \ifdim\wd#2>#1\relax
+    \setlength{#1}{\wd#2}%
   \fi
+}
+
+\newcommand{\nk@foot@separator}{%
+  \hskip0.5em plus1fill%
+  {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
+  \hskip0.5em plus1fill%
+}
+
+\newcommand{\nk@foot@row}{%
+  \hbox to \nk@foot@institutewidth{\hss\usebox\nk@foot@institute\hss}%
+  \nk@foot@separator
+  \hbox to \nk@foot@titlewidth{\hss\usebox\nk@foot@title\hss}%
+  \nk@foot@separator
+  \hbox to \nk@foot@authorwidth{\hss\usebox\nk@foot@author\hss}%
+  \nk@foot@separator
+  \hbox to \nk@foot@numberwidth{\hss\usebox\nk@foot@number\hss}%
+}
+
+\newcommand{\nk@footline}{%
+  \begingroup
+  \setlength{\nk@foot@available}{\dimexpr\paperwidth-1.6em\relax}%
+  \sbox\nk@foot@institute{%
+    \usebeamerfont{author in head/foot}\strut\insertshortinstitute}%
+  \sbox\nk@foot@title{%
+    \usebeamerfont{title in head/foot}\strut\insertshorttitle}%
+  \sbox\nk@foot@author{%
+    \usebeamerfont{author in head/foot}\strut\insertshortauthor}%
+  \sbox\nk@foot@number{%
+    \usebeamerfont{date in head/foot}\strut
+    \insertframenumber{}\,/\,\inserttotalframenumber}%
+  \nk@foot@setwidth\nk@foot@institutewidth\nk@foot@institute{.18\paperwidth}%
+  \nk@foot@setwidth\nk@foot@titlewidth\nk@foot@title{.36\paperwidth}%
+  \nk@foot@setwidth\nk@foot@authorwidth\nk@foot@author{.20\paperwidth}%
+  \nk@foot@setwidth\nk@foot@numberwidth\nk@foot@number{.10\paperwidth}%
+  \sbox\nk@foot@rowbox{\nk@foot@row}%
+  \ifdim\wd\nk@foot@rowbox>\nk@foot@available
+    % Let a long title borrow the spare width of the other fields.
+    \setlength{\nk@foot@institutewidth}{\wd\nk@foot@institute}%
+    \setlength{\nk@foot@titlewidth}{\wd\nk@foot@title}%
+    \setlength{\nk@foot@authorwidth}{\wd\nk@foot@author}%
+    \setlength{\nk@foot@numberwidth}{\wd\nk@foot@number}%
+    \sbox\nk@foot@rowbox{\nk@foot@row}%
+  \fi
+  % Keep the entire footline in one box so TeX cannot wrap or clip it.
+  \hbox to \paperwidth{%
+    \hskip0.8em%
+    \ifdim\wd\nk@foot@rowbox>\nk@foot@available
+      \resizebox{\nk@foot@available}{!}{\usebox\nk@foot@rowbox}%
+    \else
+      \hbox to \nk@foot@available{\unhbox\nk@foot@rowbox}%
+    \fi
+    \hss%
+    \hskip0.8em%
+  }%
+  \endgroup
 }
 
 \defbeamertemplate*{footline}{Nankai}{%
   \leavevmode%
   \vbox{%
     \begin{beamercolorbox}[wd=\paperwidth, ht=2.5ex, dp=1ex]{footline}%
-      \hskip 0.8em%
-      \nk@foot@item{.18\paperwidth}{\insertshortinstitute}{author in head/foot}%
-      \hfill
-      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
-      \hfill
-      \nk@foot@item{.36\paperwidth}{\insertshorttitle}{title in head/foot}%
-      \hfill
-      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
-      \hfill
-      \nk@foot@item{.20\paperwidth}{\insertshortauthor}{author in head/foot}%
-      \hfill
-      {\color{NKPurpleLight}\vrule width 0.4pt height 1.8ex depth 0.4ex}%
-      \hfill
-      \nk@foot@item{.10\paperwidth}%
-        {\insertframenumber{}\,/\,\inserttotalframenumber}{date in head/foot}%
-      \hskip 0.8em%
+      \nk@footline
     \end{beamercolorbox}%
     \nointerlineskip
     % progress bar
@@ -109,8 +196,11 @@
   \ifnum\inserttotalframenumber<1\relax
     \setlength{\nk@progressbar@width}{0pt}%
   \else
-    \pgfmathsetlength{\nk@progressbar@width}{%
-      \the\paperwidth * \insertframenumber / \inserttotalframenumber}%
+    % Divide before multiplying: the old order overflowed PGF's dimension
+    % limit after 35 widescreen frames, even with a valid total count.
+    % Clamp stale first-pass totals and appendix frame counts to the page.
+    \pgfmathparse{max(0, min(1, \insertframenumber / \inserttotalframenumber))}%
+    \setlength{\nk@progressbar@width}{\pgfmathresult\paperwidth}%
   \fi
   \begin{tikzpicture}
     \useasboundingbox (0, 0) rectangle (\the\paperwidth, 0.6pt);

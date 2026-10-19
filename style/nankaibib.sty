@@ -1,0 +1,27 @@
+% Frame-level bibliography footnotes for the Nankai Beamer template.
+% Load after biblatex; bibliography options remain under the user's control.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{nankaibib}[2026/10/20 Frame-level bibliography footnotes]
+
+\RequirePackage{biblatex}
+
+% Use Beamer's native frame footnotes, including inside columns/tcolorbox.
+% They participate in frame layout, are reset by Beamer, and work on plain
+% frames as well. Keep biblatex's punctuation, notes, and multi-key parsing.
+\newrobustcmd{\nk@bibfootnote}[1]{%
+  \begingroup
+    \let\nk@originalfootnote\footnote
+    \renewcommand{\footnote}{\nk@originalfootnote[frame]}%
+    \mkbibfootnote{#1}%
+  \endgroup
+}
+
+\DeclareCiteCommand{\footfullcite}[\nk@bibfootnote]
+  {\usebibmacro{prenote}}
+  {\usedriver
+     {\DeclareNameAlias{sortname}{default}}
+     {\thefield{entrytype}}}
+  {\multicitedelim}
+  {\usebibmacro{postnote}}
+
+\endinput
