@@ -1,0 +1,88 @@
+name: Build and Release
+
+on:
+  push:
+    branches: ['**']
+    tags: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
+jobs:
+  build:
+    name: Compile and package template
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - name: Compile example with XeLaTeX and Biber
+        uses: xu-cheng/latex-action@e2f99d4b3685b0da93f97e1b86ad8fab81105098 # v3
+        with:
+          root_file: main.tex
+          texlive_version: '2024'
+          latexmk_use_xelatex: true
+          args: -file-line-error -halt-on-error -interaction=nonstopmode -no-shell-escape
+          # Never distribute the checked-in preview as a new build.
+          pre_compile: rm -f main.pdf
+
+      - name: Package template
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
+        run: |
+          set -euo pipefail
+          test -s main.pdf
+          # Tags may contain slashes or other characters unsuitable for asset names.
+          version=$(printf '%s' "$PACKAGE_VERSION" | LC_ALL=C tr -c 'A-Za-z0-9._-' '-')
+          archive="dist/NKU-Beamer-Template-${version}.zip"
+          mkdir -p dist
+          zip -r -X "$archive" \
+            main.tex main.pdf references.bib style resources README.md README-zh.md LICENSE
+          unzip -t "$archive"
+          cp main.pdf dist/main.pdf
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: template
+          path: |
+            dist/*.zip
+            dist/main.pdf
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: template
+          path: dist
+
+      - name: Create or update Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/*.zip
+            dist/main.pdf
