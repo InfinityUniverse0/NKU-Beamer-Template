@@ -50,6 +50,8 @@ NKU-Beamer-Template/
 
 ## 快速开始
 
+可从 [Releases](https://github.com/InfinityUniverse0/NKU-Beamer-Template/releases) 下载即用 ZIP。每个压缩包包含模板源码、主题、图片、文献数据库、说明文档、许可证和重新编译的 `main.pdf`。解压后在该目录编译，或将 ZIP 上传到 Overleaf 并选择 **XeLaTeX**。
+
 ### 环境要求
 
 使用较新的 **TeX Live**、**MacTeX** 或 **MiKTeX**，并安装 **XeLaTeX** 与 **Biber**。验证环境为 TeX Live 2024、Beamer 3.71。

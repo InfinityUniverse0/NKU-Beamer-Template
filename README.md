@@ -50,6 +50,8 @@ NKU-Beamer-Template/
 
 ## Getting Started
 
+Download a ready-to-use ZIP from [Releases](https://github.com/InfinityUniverse0/NKU-Beamer-Template/releases). Each package contains the template source, theme, images, bibliography, documentation, license, and a freshly compiled `main.pdf`. Extract it and compile from the extracted directory, or upload the ZIP to Overleaf and select **XeLaTeX**.
+
 ### Prerequisites
 
 Use a recent **TeX Live**, **MacTeX**, or **MiKTeX** installation with **XeLaTeX** and **Biber**. The validation environment is TeX Live 2024 with Beamer 3.71.
